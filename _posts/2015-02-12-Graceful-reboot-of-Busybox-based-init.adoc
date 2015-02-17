@@ -1,7 +1,44 @@
-Gracefull re
-===========
+Graceful reboot of Busybox-based init
+=====================================
 
-```
-echo "Hello World"
+This is an excerpt from an interesting reply i have found on the busybox ML about how to handle a reboot if you have busybox and init is running from it. More importantly, how to handle extra filesystems from mounted devices.
 
-```
+(see http://permalink.gmane.org/gmane.linux.busybox/37085)
+
+Re: How to reboot the system if busybox run as init
+
+
+> sync && sleep 1 && reboot -f
+
+
+This is the right way to do it, when your process 1 is a shell.Depending on your hardware and the way you're using it, you might want to manually unmount - or remount read-only - a few filesystems first.
+
+Generally, to shut down a Unix machine, you want to do the following operations, in that order:
+
+ - Cleanly stop all long-running processes. (This can be done easily
+with a supervision system, not so easily with SystemV-style inits.)
+ - Gently kill all processes (with a SIGTERM), and wait a few seconds.
+ - Brutally kill all processes (with a SIGKILL), to catch processes
+that have escaped the previous step.
+ - Unmount all your filesystems. This is possible because you have
+killed all the processes (save process 1), so you should not have any
+remaining open files on other filesystems than /.
+ - Remount the / filesystem read-only. My opinion is that / should
+*always* be read-only, but most systems are badly configured and can't
+work properly with a read-only /.
+ If your process 1 is a shell, you might have trouble remounting /
+read-only, because the shell might have some files open for writing.
+There is no way around that, except design your system differently.
+It also does not matter if your root filesystem lives in RAM (which
+is a common way of working around a bad design).
+ - Perform hardware-specific operations such as saving the system
+clock, writing various states into NVRAM, etc.
+ - Shut down the hardware.
+
+The SystemV-style "reboot" command does all this automatically, but of course, it only works if process 1 is a SystemV-style init. Other init schemes have their own way of doing it (runit uses the /etc/runit/3 script, s6 runs /service/.s6-svscan/finish as process 1...) If your process 1 is a shell, you will have to do it by hand. Harald's command is a shortcut that works if your system is simple enough and you don't have to worry about a random fsck.
+
+ 
+> But, there should be an 'init 6' around too, shouldn't it?
+
+ Yes, but that command only sends a signal (typically via the /dev/initctl fifo) to process 1. If process 1 is a SystemV-style init, it will listen to it and trigger its shutdown procedure. If process 1 is a shell, there is no such hook and the command will simply be ignored.
+
