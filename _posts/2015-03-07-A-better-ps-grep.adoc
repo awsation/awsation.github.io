@@ -1,0 +1,24 @@
+A better ps + grep
+==================
+
+I often fall into this pitfall because it happens to be the first snapse that fires in my brain about how to go about doing a combined ps + grep.
+
+Let's say, I want to see if `iterm` is running. I would do something like this:
+
+`22:35 (awsation@localhost) >> ~/Work/git_repos/dotfiles $ ps -ef | grep iterm`
+
+I would get an output like this:
+
+
+`22:35 (awsation@localhost) >> ~/Work/git_repos/dotfiles $ ps -ef | grep -i iterm`
+  
+  `502 48206  2444   0 15Jan15 ??         4:51.14 /Applications/iTerm.app/Contents/MacOS/iTerm
+  502 88832 48228   0 10:35pm ttys002    0:00.00 grep -i iterm`
+
+I would usually, ignore the extra `grep -i iterm`. But stubmling upon Chris's blog:
+
+http://chneukirchen.org/blog/archive/2013/07/summer-of-scripts-px.html
+
+I now have a fix and another alias to play with: `px iterm` :)
+
+Thanks Chris.
